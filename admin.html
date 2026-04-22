@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fruit Demon List - Admin</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <nav class="top-nav" aria-label="Main navigation">
+    <a href="/index.html">About</a>
+    <a href="/list.html">Leaderboard</a>
+    <a href="/users.html">User Leaderboard</a>
+    <a href="/admin.html">Admin</a>
+  </nav>
+
+  <main class="page">
+    <section class="panel">
+      <h1>Admin</h1>
+      <p class="muted">Manage levels and user leaderboard entries.</p>
+    </section>
+
+    <section class="panel" id="auth-box">
+      <h2>Login</h2>
+      <form id="login-form" class="form">
+        <div class="field">
+          <label for="login-email">Email</label>
+          <input id="login-email" type="email" required />
+        </div>
+
+        <div class="field">
+          <label for="login-password">Password</label>
+          <input id="login-password" type="password" required />
+        </div>
+
+        <button type="submit">Login</button>
+      </form>
+    </section>
+
+    <section class="panel hidden" id="admin-panel">
+      <div class="toolbar">
+        <p id="admin-status" class="muted">Logged in</p>
+        <button id="logout-btn" type="button">Logout</button>
+      </div>
+
+      <div class="admin-grid">
+        <!-- LEVELS MANAGEMENT -->
+        <div class="subpanel">
+          <h2>Add / Update Level</h2>
+          <form id="level-form" class="form">
+            <div class="field">
+              <label for="level-id">Level ID *</label>
+              <input id="level-id" type="text" placeholder="retray" required />
+            </div>
+
+            <div class="field">
+              <label for="level-name">Level Name *</label>
+              <input id="level-name" type="text" placeholder="ReTraY" required />
+            </div>
+
+            <div class="field">
+              <label for="level-points">Points *</label>
+              <input id="level-points" type="number" step="0.01" min="0" required />
+            </div>
+
+            <div class="field">
+              <label for="initial-rank">Initial Rank</label>
+              <input id="initial-rank" type="number" min="1" />
+            </div>
+
+            <div class="field">
+              <label for="level-rank">Current Rank *</label>
+              <input id="level-rank" type="number" min="1" required />
+            </div>
+
+            <div class="field">
+              <label for="level-verifier">Verifier</label>
+              <input id="level-verifier" type="text" />
+            </div>
+
+            <div class="field">
+              <label for="verifier-fruit">Verifier Fruit</label>
+              <input id="verifier-fruit" type="text" />
+            </div>
+
+            <div class="field">
+              <label for="verify-date">Verify Date (YYYY-MM-DD)</label>
+              <input id="verify-date" type="date" />
+            </div>
+
+            <div class="field">
+              <label for="level-image">Image URL</label>
+              <input id="level-image" type="url" placeholder="https://..." />
+            </div>
+
+            <div class="field">
+              <label for="showcase-url">Showcase URL</label>
+              <input id="showcase-url" type="url" placeholder="https://..." />
+            </div>
+
+            <div class="field">
+              <label for="verification-url">Verification URL</label>
+              <input id="verification-url" type="url" placeholder="https://..." />
+            </div>
+
+            <div class="field">
+              <label for="victors">Victors (comma separated)</label>
+              <textarea id="victors" rows="3" placeholder="player1, player2, player3"></textarea>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit">Save Level</button>
+              <button id="clear-level-btn" type="button">Clear Form</button>
+              <button id="delete-level-btn" type="button" class="btn-danger">Delete Level</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- USERS MANAGEMENT -->
+        <div class="subpanel">
+          <h2>Add / Update User</h2>
+          <form id="user-form" class="form">
+            <div class="field">
+              <label for="user-id">User ID *</label>
+              <input id="user-id" type="text" placeholder="freeze" required />
+            </div>
+
+            <div class="field">
+              <label for="username">Username *</label>
+              <input id="username" type="text" placeholder="freeze" required />
+            </div>
+
+            <div class="field">
+              <label>Completed Levels</label>
+              <div id="levels-checkboxes" class="checkbox-group"></div>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit">Save User</button>
+              <button id="clear-user-btn" type="button">Clear Form</button>
+              <button id="delete-user-btn" type="button" class="btn-danger">Delete User</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- LEVELS LIST (for editing/deleting) -->
+      <div class="subpanel">
+        <h2>Levels (Click to Edit)</h2>
+        <div id="levels-list" class="item-list"></div>
+      </div>
+
+      <!-- USERS LIST (for editing/deleting) -->
+      <div class="subpanel">
+        <h2>Users (Click to Edit)</h2>
+        <div id="users-list" class="item-list"></div>
+      </div>
+
+      <p id="status" class="status"></p>
+    </section>
+  </main>
+
+  <script type="module" src="/src/admin.js"></script>
+</body>
+</html>

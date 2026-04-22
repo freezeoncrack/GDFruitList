@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fruit Demon List - Leaderboard</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <nav class="top-nav" aria-label="Main navigation">
+    <a href="/index.html">About</a>
+    <a href="/list.html">Leaderboard</a>
+    <a href="/users.html">User Leaderboard</a>
+    <a href="/admin.html">Admin</a>
+  </nav>
+
+  <main class="page">
+    <section class="panel">
+      <h1>Leaderboard</h1>
+      <p class="muted">Current ranked list.</p>
+    </section>
+
+    <section class="panel">
+      <div id="levels-list" class="card-list"></div>
+    </section>
+  </main>
+
+  <script type="module" src="/src/list.js"></script>
+</body>
+</html>
