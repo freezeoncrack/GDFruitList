@@ -14,6 +14,32 @@ const toastContainer = document.getElementById("toast-container");
 
 let currentUserUid = null;
 
+async function getPresignedVideoUrl(fileName) {
+  const user = auth.currentUser;
+  if (!user) {
+    throw new Error("Not authenticated.");
+  }
+
+  const idToken = await user.getIdToken();
+
+  const response = await fetch("/api/get-verification-url", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${idToken}`
+    },
+    body: JSON.stringify({ fileName })
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error || "Failed to get video URL.");
+  }
+
+  const data = await response.json();
+  return data.url;
+}
+
 function showToast(message, isError = false) {
   const toast = document.createElement("div");
   toast.className = `toast ${isError ? "toast-error" : "toast-success"}`;
@@ -77,14 +103,20 @@ function renderVerificationCard(fileName, metadata) {
   const viewBtn = document.createElement("button");
   viewBtn.className = "btn-view";
   viewBtn.textContent = "View Video";
-  viewBtn.onclick = () => {
-    window.open(
-      `https://e4104b4afa44001c802f7ae4a7108450.r2.cloudflarestorage.com/gdfruitlist/verifications/${encodeURIComponent(
-        fileName
-      )}`,
-      "_blank"
-    );
-  };
+    viewBtn.onclick = async () => {
+      viewBtn.disabled = true;
+      viewBtn.textContent = "Loading...";
+      try {
+        const videoUrl = await getPresignedVideoUrl(fileName);
+        window.open(videoUrl, "_blank");
+      } catch (error) {
+        console.error(error);
+        showToast("Failed to load video URL.", true);
+      } finally {
+        viewBtn.disabled = false;
+        viewBtn.textContent = "View Video";
+      }
+    };
 
   const deleteBtn = document.createElement("button");
   deleteBtn.className = "btn-delete";
