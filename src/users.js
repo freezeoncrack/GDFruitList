@@ -26,6 +26,7 @@ function renderUsers(users) {
       </div>
       <div class="card-meta">
         Username: ${escapeHtml(user.username)}<br />
+        Display Name: ${escapeHtml(user.displayName || user.username)}<br />
         Completed Levels: ${Array.isArray(user.completedLevels) ? user.completedLevels.length : 0}
       </div>
     </article>

@@ -22,9 +22,10 @@ const accountPanel = document.getElementById("account-panel");
 const authNeededPanel = document.getElementById("auth-needed-panel");
 const toastContainer = document.getElementById("toast-container");
 
-const usernameForm = document.getElementById("username-form");
-const usernameInput = document.getElementById("new-username");
-const saveUsernameBtn = document.getElementById("save-username-btn");
+const displayNameForm = document.getElementById("display-name-form");
+const usernameValueEl = document.getElementById("username-value");
+const displayNameInput = document.getElementById("new-display-name");
+const saveDisplayNameBtn = document.getElementById("save-display-name-btn");
 
 const completedCountEl = document.getElementById("completed-count");
 const pointsTotalEl = document.getElementById("points-total");
@@ -35,7 +36,7 @@ const logoutBtn = document.getElementById("logout-btn");
 
 let currentUserDocId = null;
 
-function cleanUsername(value) {
+function cleanDisplayName(value) {
 	return value.trim();
 }
 
@@ -96,32 +97,23 @@ async function loadAccount(user) {
 
 	const data = resolved.data;
 	const username = data.username || "";
+	const displayName = data.displayName || username || "";
 	const completedCount = Array.isArray(data.completedLevels)
 		? data.completedLevels.length
 		: 0;
 	const points = Number(data.points || 0).toFixed(2);
 
-	usernameInput.value = username;
+	displayNameInput.value = displayName;
+	usernameValueEl.textContent = username || "—";
 	completedCountEl.textContent = String(completedCount);
 	pointsTotalEl.textContent = points;
 
 	localStorage.setItem("fruitUserDocId", currentUserDocId);
 	localStorage.setItem("fruitUsername", username);
+	localStorage.setItem("fruitDisplayName", displayName);
 }
 
-async function usernameTakenByAnotherUser(nextUsername) {
-	const usersRef = collection(db, "users");
-	const dupQuery = query(usersRef, where("username", "==", nextUsername), limit(1));
-	const dupSnap = await getDocs(dupQuery);
-
-	if (dupSnap.empty) {
-		return false;
-	}
-
-	return dupSnap.docs[0].id !== currentUserDocId;
-}
-
-usernameForm.addEventListener("submit", async (event) => {
+displayNameForm.addEventListener("submit", async (event) => {
 	event.preventDefault();
 
 	const user = auth.currentUser;
@@ -130,47 +122,41 @@ usernameForm.addEventListener("submit", async (event) => {
 		return;
 	}
 
-	const nextUsername = cleanUsername(usernameInput.value);
+	const nextDisplayName = cleanDisplayName(displayNameInput.value);
 
-	if (!nextUsername) {
-		showToast("Username cannot be empty.", true);
+	if (!nextDisplayName) {
+		showToast("Display name cannot be empty.", true);
 		return;
 	}
 
-	saveUsernameBtn.disabled = true;
-	saveUsernameBtn.textContent = "Saving...";
+	saveDisplayNameBtn.disabled = true;
+	saveDisplayNameBtn.textContent = "Saving...";
 
 	try {
-		const alreadyTaken = await usernameTakenByAnotherUser(nextUsername);
-		if (alreadyTaken) {
-			throw new Error("That username is already in use.");
-		}
-
 		await updateDoc(doc(db, "users", currentUserDocId), {
-			username: nextUsername
+			displayName: nextDisplayName
 		});
 
 		await setDoc(
 			doc(db, "users_public", user.uid),
 			{
-				username: nextUsername,
-				uid: user.uid
+				displayName: nextDisplayName
 			},
 			{ merge: true }
 		);
 
 		await updateProfile(user, {
-			displayName: nextUsername
+			displayName: nextDisplayName
 		});
 
-		localStorage.setItem("fruitUsername", nextUsername);
-		showToast("Username updated.");
+		localStorage.setItem("fruitDisplayName", nextDisplayName);
+		showToast("Display name updated.");
 	} catch (error) {
 		console.error(error);
-		showToast(error.message || "Failed to update username.", true);
+		showToast(error.message || "Failed to update display name.", true);
 	} finally {
-		saveUsernameBtn.disabled = false;
-		saveUsernameBtn.textContent = "Save Username";
+		saveDisplayNameBtn.disabled = false;
+		saveDisplayNameBtn.textContent = "Save Display Name";
 	}
 });
 
@@ -208,6 +194,7 @@ logoutBtn.addEventListener("click", async () => {
 		localStorage.removeItem("fruitUid");
 		localStorage.removeItem("fruitUserDocId");
 		localStorage.removeItem("fruitUsername");
+		localStorage.removeItem("fruitDisplayName");
 		showToast("Logged out.");
 	} catch (error) {
 		console.error(error);

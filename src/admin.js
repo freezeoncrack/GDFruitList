@@ -178,6 +178,23 @@ async function resolveUserUid(userId) {
   return "";
 }
 
+async function resolveUserDisplayName(userId) {
+  const existing = cachedUsers.find((u) => u.id === userId);
+  if (existing && typeof existing.displayName === "string" && existing.displayName.trim()) {
+    return existing.displayName.trim();
+  }
+
+  const userSnap = await getDoc(doc(db, "users", userId));
+  if (userSnap.exists()) {
+    const displayName = String(userSnap.data().displayName || userSnap.data().username || "").trim();
+    if (displayName) {
+      return displayName;
+    }
+  }
+
+  return "";
+}
+
 function renderLevelCheckboxes(completed = []) {
   if (!cachedLevels.length) {
     levelsCheckboxesContainer.innerHTML = "<p class='muted'>No levels available</p>";
@@ -246,6 +263,7 @@ function renderUsersList(users) {
     <div class="item-card" data-user-id="${escapeHtml(user.id)}">
       <p class="item-card-title">${escapeHtml(user.username)}</p>
       <p class="item-card-meta">
+        Display Name: ${escapeHtml(user.displayName || user.username)} |
         Points: ${user.points || 0} | 
         Completed: ${Array.isArray(user.completedLevels) ? user.completedLevels.length : 0} levels
       </p>
@@ -409,13 +427,16 @@ userForm.addEventListener("submit", async (event) => {
   try {
     const publicUserDocId = resolvePublicUserDocId(id);
     const uid = await resolveUserUid(id);
+    const displayName = await resolveUserDisplayName(id);
+    const finalDisplayName = displayName || username;
 
     await setDoc(
       doc(db, "users", id),
       {
         username,
         completedLevels,
-        points
+        points,
+        ...(finalDisplayName ? { displayName: finalDisplayName } : {})
       },
       { merge: true }
     );
@@ -424,6 +445,7 @@ userForm.addEventListener("submit", async (event) => {
       doc(db, "users_public", publicUserDocId),
       {
         username,
+        ...(finalDisplayName ? { displayName: finalDisplayName } : {}),
         completedLevels,
         points,
         ...(uid ? { uid } : {})

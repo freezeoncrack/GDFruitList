@@ -73,6 +73,7 @@ loginButton.addEventListener("click", async () => {
     localStorage.setItem("fruitUid", authUid);
     localStorage.setItem("fruitUserDocId", userDocId);
     localStorage.setItem("fruitUsername", userData.username || userDocId);
+    localStorage.setItem("fruitDisplayName", userData.displayName || userData.username || userDocId);
 
     window.location.href = "users.html";
   } catch (error) {

@@ -75,9 +75,11 @@ signupButton.addEventListener("click", async () => {
     );
 
     const uid = userCredential.user.uid;
+    const displayName = displayUsername;
 
     await setDoc(userRef, {
       username: displayUsername,
+      displayName: displayName,
       email: email,
       uid: uid,
       completedLevels: [],
@@ -86,6 +88,7 @@ signupButton.addEventListener("click", async () => {
 
     await setDoc(doc(db, "users_public", uid), {
       username: displayUsername,
+      displayName: displayName,
       uid: uid,
       completedLevels: [],
       points: 0
@@ -94,6 +97,7 @@ signupButton.addEventListener("click", async () => {
     localStorage.setItem("fruitUid", uid);
     localStorage.setItem("fruitUserDocId", usernameId);
     localStorage.setItem("fruitUsername", displayUsername);
+    localStorage.setItem("fruitDisplayName", displayName);
 
     window.location.href = "users.html";
   } catch (error) {

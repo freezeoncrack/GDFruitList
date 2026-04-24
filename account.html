@@ -19,7 +19,7 @@
   <main class="page">
     <section class="panel">
       <h1>Account</h1>
-      <p class="muted">Update your username, send a password reset email, or open admin tools.</p>
+      <p class="muted">Update your display name, send a password reset email, or open admin tools.</p>
       <p class="muted" id="account-auth-state">Checking login status...</p>
     </section>
 
@@ -27,15 +27,21 @@
       <div class="account-grid">
         <article class="subpanel">
           <h2>Profile</h2>
-          <p class="muted">You can only edit your username here. Completed levels and points are read-only.</p>
+          <p class="muted">Your username is read-only here. You can only edit your display name.</p>
+           <div class="stats-list" style="margin-bottom: 1rem;">
+             <div class="stat-card">
+               <span class="stat-label">Username</span>
+               <strong id="username-value">—</strong>
+             </div>
+           </div>
 
-          <form id="username-form" class="form" novalidate>
+          <form id="display-name-form" class="form" novalidate>
             <div class="field">
-              <label for="new-username">Username</label>
-              <input id="new-username" type="text" maxlength="30" placeholder="Enter your new username" required />
+              <label for="new-display-name">Display Name</label>
+              <input id="new-display-name" type="text" maxlength="30" placeholder="Enter your new display name" required />
             </div>
 
-            <button id="save-username-btn" type="submit">Save Username</button>
+            <button id="save-display-name-btn" type="submit">Save Display Name</button>
           </form>
         </article>
 
