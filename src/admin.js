@@ -161,6 +161,23 @@ function resolvePublicUserDocId(userId) {
   return userId;
 }
 
+async function resolveUserUid(userId) {
+  const existing = cachedUsers.find((u) => u.id === userId);
+  if (existing && typeof existing.uid === "string" && existing.uid.trim()) {
+    return existing.uid.trim();
+  }
+
+  const userSnap = await getDoc(doc(db, "users", userId));
+  if (userSnap.exists()) {
+    const uid = String(userSnap.data().uid || "").trim();
+    if (uid) {
+      return uid;
+    }
+  }
+
+  return "";
+}
+
 function renderLevelCheckboxes(completed = []) {
   if (!cachedLevels.length) {
     levelsCheckboxesContainer.innerHTML = "<p class='muted'>No levels available</p>";
@@ -391,6 +408,7 @@ userForm.addEventListener("submit", async (event) => {
 
   try {
     const publicUserDocId = resolvePublicUserDocId(id);
+    const uid = await resolveUserUid(id);
 
     await setDoc(
       doc(db, "users", id),
@@ -408,9 +426,7 @@ userForm.addEventListener("submit", async (event) => {
         username,
         completedLevels,
         points,
-        ...(cachedUsers.find((u) => u.id === id)?.uid && {
-          uid: cachedUsers.find((u) => u.id === id).uid
-        })
+        ...(uid ? { uid } : {})
       },
       { merge: true }
     );

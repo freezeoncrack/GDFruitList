@@ -25,8 +25,7 @@ function renderUsers(users) {
         <div class="rank-pill">${Number(user.points || 0).toFixed(2)} pts</div>
       </div>
       <div class="card-meta">
-        Completed Levels: ${Array.isArray(user.completedLevels) ? user.completedLevels.length : 0} ·
-        ID: ${escapeHtml(user.id)}
+        Completed Levels: ${Array.isArray(user.completedLevels) ? user.completedLevels.length : 0}
       </div>
     </article>
   `).join("");

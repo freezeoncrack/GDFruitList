@@ -4,7 +4,6 @@
 
 ### User Leaderboard Pages
 - [x] Created `/users.html` - User leaderboard display page
-- [x] Created `/userleaderboard.html` - Alternative user leaderboard page
 - [x] Both pages display users ranked by total points
 - [x] Show completed levels count for each user
 
@@ -62,7 +61,7 @@
 ## 🧪 How to Test
 
 ### Test User Leaderboard
-1. Navigate to `/users.html` or `/userleaderboard.html`
+1. Navigate to `/users.html`
 2. Verify users are displayed ranked by points
 3. Check that completed levels count is shown
 
@@ -115,7 +114,6 @@
 ## 📁 Files Modified
 
 - `/users.html` - CREATED
-- `/userleaderboard.html` - UPDATED
 - `/admin.html` - UPDATED
 - `/style.css` - UPDATED
 - `/src/admin.js` - COMPLETELY REWRITTEN

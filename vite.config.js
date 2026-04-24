@@ -10,7 +10,6 @@ export default defineConfig({
         list: resolve(__dirname, 'list.html'),
         users: resolve(__dirname, 'users.html'),
         admin: resolve(__dirname, 'admin.html'),
-        userleaderboard: resolve(__dirname, 'userleaderboard.html'),
          login: resolve(__dirname, 'login.html'),
           signup: resolve(__dirname, 'signup.html'),
            account: resolve(__dirname, 'account.html'),
