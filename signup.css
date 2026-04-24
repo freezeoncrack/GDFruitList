@@ -61,6 +61,23 @@ body {
   background: #e7e7e7;
 }
 
+.auth-panel .muted {
+  margin-bottom: 14px;
+}
+
+.auth-panel input + input {
+  margin-top: 12px;
+}
+
+.auth-panel button {
+  margin-top: 16px;
+}
+
+.auth-panel a {
+  display: inline-block;
+  margin-top: 14px;
+}
+
 .page {
   width: min(1100px, calc(100% - 24px));
   margin: 0 auto;

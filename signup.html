@@ -6,7 +6,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>GD Fruit List - Leaderboard</title>
-  <link rel="stylesheet" href="./style.css" />
+  <link rel="stylesheet" href="./signup.css" />
 </head>
 <body>
   <nav class="top-nav" aria-label="Main navigation">
@@ -18,16 +18,16 @@
   </nav>
 
   <main class="page">
-    <section class="panel">
-      <h1>Leaderboard</h1>
-      <p class="muted">Current ranked list.</p>
-    </section>
-
-    <section class="panel">
-      <div id="levels-list" class="card-list"></div>
+    <section class="panel auth-panel">
+      <h1>Sign Up</h1>
+      <p class="muted">Please enter a username and password.</p>
+      <input type="text" id="username" placeholder="Username" />
+      <input type="password" id="password" placeholder="Password" />
+      <button id="signup-button">Sign Up</button>
+      <a href="login.html">Already have an account? Log in here.</a>
     </section>
   </main>
 
-  <script type="module" src="src/list.js"></script>
+  <script type="module" src="src/signup.js"></script>
 </body>
 </html>
