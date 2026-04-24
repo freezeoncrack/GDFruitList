@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import { S3Client, DeleteObjectCommand } from "@aws-sdk/client-s3";
 
 const FIREBASE_CERTS_URL = "https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com";
 
@@ -11,17 +12,14 @@ function parseMaxAgeMs(cacheControl) {
   if (!cacheControl) {
     return 0;
   }
-
   const match = cacheControl.match(/max-age=(\d+)/i);
   if (!match) {
     return 0;
   }
-
   const seconds = Number(match[1]);
   if (!Number.isFinite(seconds) || seconds <= 0) {
     return 0;
   }
-
   return seconds * 1000;
 }
 
@@ -37,15 +35,6 @@ function parseJsonBuffer(buffer) {
   } catch {
     return null;
   }
-}
-
-function hashSha256Hex(value) {
-  return crypto.createHash("sha256").update(value).digest("hex");
-}
-
-function hmacSha256(key, value, encoding) {
-  const hmac = crypto.createHmac("sha256", key).update(value);
-  return encoding ? hmac.digest(encoding) : hmac.digest();
 }
 
 async function getFirebaseCerts() {
@@ -75,11 +64,9 @@ function getBearerToken(req) {
   if (!authHeader || typeof authHeader !== "string") {
     return null;
   }
-
   if (!authHeader.startsWith("Bearer ")) {
     return null;
   }
-
   return authHeader.slice("Bearer ".length).trim();
 }
 
@@ -146,95 +133,10 @@ async function verifyFirebaseIdToken(idToken, projectId) {
   return payload;
 }
 
-function awsEncode(value) {
-  return encodeURIComponent(value).replace(/[!'()*]/g, (char) =>
-    `%${char.charCodeAt(0).toString(16).toUpperCase()}`
-  );
-}
-
-function awsPathEncode(path) {
-  return path
-    .split("/")
-    .map((segment) => awsEncode(segment))
-    .join("/");
-}
-
-function toAmzDate(now) {
-  const iso = now.toISOString();
-  return {
-    amzDate: `${iso.slice(0, 4)}${iso.slice(5, 7)}${iso.slice(8, 10)}T${iso.slice(11, 13)}${iso.slice(14, 16)}${iso.slice(17, 19)}Z`,
-    dateStamp: `${iso.slice(0, 4)}${iso.slice(5, 7)}${iso.slice(8, 10)}`
-  };
-}
-
-function buildPresignedDeleteUrl({
-  endpoint,
-  bucket,
-  objectKey,
-  accessKeyId,
-  secretAccessKey,
-  expiresSeconds,
-  now
-}) {
-  const endpointUrl = new URL(endpoint);
-  const host = endpointUrl.host;
-  const { amzDate, dateStamp } = toAmzDate(now);
-
-  const method = "DELETE";
-  const service = "s3";
-  const region = "auto";
-  const signedHeaders = "host";
-  const credentialScope = `${dateStamp}/${region}/${service}/aws4_request`;
-
-  const canonicalUri = `/${awsPathEncode(bucket)}/${awsPathEncode(objectKey)}`;
-
-  const query = {
-    "X-Amz-Algorithm": "AWS4-HMAC-SHA256",
-    "X-Amz-Credential": `${accessKeyId}/${credentialScope}`,
-    "X-Amz-Date": amzDate,
-    "X-Amz-Expires": String(expiresSeconds),
-    "X-Amz-SignedHeaders": signedHeaders
-  };
-
-  const canonicalQueryString = Object.keys(query)
-    .sort()
-    .map((key) => `${awsEncode(key)}=${awsEncode(query[key])}`)
-    .join("&");
-
-  const canonicalHeaders = `host:${host}\n`;
-  const payloadHash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
-
-  const canonicalRequest = [
-    method,
-    canonicalUri,
-    canonicalQueryString,
-    canonicalHeaders,
-    signedHeaders,
-    payloadHash
-  ].join("\n");
-
-  const stringToSign = [
-    "AWS4-HMAC-SHA256",
-    amzDate,
-    credentialScope,
-    hashSha256Hex(canonicalRequest)
-  ].join("\n");
-
-  const kDate = hmacSha256(`AWS4${secretAccessKey}`, dateStamp);
-  const kRegion = hmacSha256(kDate, region);
-  const kService = hmacSha256(kRegion, service);
-  const kSigning = hmacSha256(kService, "aws4_request");
-  const signature = hmacSha256(kSigning, stringToSign, "hex");
-
-  const finalQuery = `${canonicalQueryString}&X-Amz-Signature=${signature}`;
-  return `${endpointUrl.protocol}//${host}${canonicalUri}?${finalQuery}`;
-}
-
 function parseBody(req) {
   if (!req.body) {
     return {};
   }
-
   if (typeof req.body === "string") {
     try {
       return JSON.parse(req.body);
@@ -242,7 +144,6 @@ function parseBody(req) {
       return {};
     }
   }
-
   return req.body;
 }
 
@@ -287,30 +188,28 @@ export default async function handler(req, res) {
   const objectKey = `verifications/${fileName}`;
 
   try {
-    const deleteUrl = buildPresignedDeleteUrl({
-      endpoint,
-      bucket,
-      objectKey,
-      accessKeyId,
-      secretAccessKey,
-      expiresSeconds: 300,
-      now: new Date()
+    const client = new S3Client({
+      region: "auto",
+      endpoint: endpoint,
+      credentials: {
+        accessKeyId,
+        secretAccessKey
+      }
     });
 
-    const deleteResponse = await fetch(deleteUrl, {
-      method: "DELETE"
+    const command = new DeleteObjectCommand({
+      Bucket: bucket,
+      Key: objectKey
     });
 
-    if (!deleteResponse.ok) {
-      throw new Error("Failed to delete from R2.");
-    }
+    await client.send(command);
 
     return res.status(200).json({
       message: "Verification deleted successfully.",
       fileName
     });
   } catch (error) {
-    console.error(error);
+    console.error("Delete verification error:", error);
     return res.status(500).json({ error: "Could not delete verification." });
   }
 }

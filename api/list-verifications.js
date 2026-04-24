@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
+import { S3Client, ListObjectsV2Command } from "@aws-sdk/client-s3";
 
 const FIREBASE_CERTS_URL = "https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com";
-const MAX_VERIFICATIONS = 1000;
 
 let certCache = {
   certs: null,
@@ -12,17 +12,14 @@ function parseMaxAgeMs(cacheControl) {
   if (!cacheControl) {
     return 0;
   }
-
   const match = cacheControl.match(/max-age=(\d+)/i);
   if (!match) {
     return 0;
   }
-
   const seconds = Number(match[1]);
   if (!Number.isFinite(seconds) || seconds <= 0) {
     return 0;
   }
-
   return seconds * 1000;
 }
 
@@ -38,15 +35,6 @@ function parseJsonBuffer(buffer) {
   } catch {
     return null;
   }
-}
-
-function hashSha256Hex(value) {
-  return crypto.createHash("sha256").update(value).digest("hex");
-}
-
-function hmacSha256(key, value, encoding) {
-  const hmac = crypto.createHmac("sha256", key).update(value);
-  return encoding ? hmac.digest(encoding) : hmac.digest();
 }
 
 async function getFirebaseCerts() {
@@ -76,11 +64,9 @@ function getBearerToken(req) {
   if (!authHeader || typeof authHeader !== "string") {
     return null;
   }
-
   if (!authHeader.startsWith("Bearer ")) {
     return null;
   }
-
   return authHeader.slice("Bearer ".length).trim();
 }
 
@@ -147,62 +133,6 @@ async function verifyFirebaseIdToken(idToken, projectId) {
   return payload;
 }
 
-function awsEncode(value) {
-  return encodeURIComponent(value).replace(/[!'()*]/g, (char) =>
-    `%${char.charCodeAt(0).toString(16).toUpperCase()}`
-  );
-}
-
-function buildListUrl(endpoint, bucket, prefix) {
-  const url = new URL(endpoint);
-  url.pathname = `/${bucket}/`;
-  url.searchParams.set("prefix", prefix);
-  url.searchParams.set("max-keys", String(MAX_VERIFICATIONS));
-  url.searchParams.set("list-type", "2");
-  return url.toString();
-}
-
-async function listVerificationsFromR2(accessKeyId, secretAccessKey, endpoint, bucket) {
-  const prefix = "verifications/";
-  const listUrl = buildListUrl(endpoint, bucket, prefix);
-
-  const response = await fetch(listUrl, {
-    method: "GET",
-    headers: {
-      Authorization: `AWS4-HMAC-SHA256 Credential=${accessKeyId}/auto/s3/aws4_request, SignedHeaders=host, Signature=placeholder`
-    }
-  });
-
-  if (!response.ok) {
-    throw new Error("Could not list verifications from R2.");
-  }
-
-  const xml = await response.text();
-
-  const verifications = [];
-  const keyRegex = /<Key>([^<]+)<\/Key>/g;
-  let match;
-
-  while ((match = keyRegex.exec(xml)) !== null) {
-    const key = match[1];
-    if (key !== prefix) {
-      const fileName = key.slice(prefix.length);
-
-      const parts = fileName.split("__");
-      const metadata = {
-        level_name: parts[0] || "",
-        date_verified: parts[1] || "",
-        verified_by: parts[2] || "",
-        discord_username: parts[3]?.replace(/\.[^.]+$/, "") || ""
-      };
-
-      verifications.push({ fileName, metadata });
-    }
-  }
-
-  return verifications;
-}
-
 export default async function handler(req, res) {
   if (req.method !== "GET") {
     res.setHeader("Allow", "GET");
@@ -231,18 +161,48 @@ export default async function handler(req, res) {
   }
 
   try {
-    const verifications = await listVerificationsFromR2(
-      accessKeyId,
-      secretAccessKey,
-      endpoint,
-      bucket
-    );
+    const client = new S3Client({
+      region: "auto",
+      endpoint: endpoint,
+      credentials: {
+        accessKeyId,
+        secretAccessKey
+      }
+    });
+
+    const command = new ListObjectsV2Command({
+      Bucket: bucket,
+      Prefix: "verifications/"
+    });
+
+    const response = await client.send(command);
+    const contents = response.Contents || [];
+
+    const verifications = contents
+      .map((obj) => {
+        const key = obj.Key;
+        if (!key || key === "verifications/") {
+          return null;
+        }
+        const fileName = key.replace(/^verifications\//, "");
+
+        const parts = fileName.split("__");
+        const metadata = {
+          level_name: parts[0] || "",
+          date_verified: parts[1] || "",
+          verified_by: parts[2] || "",
+          discord_username: parts[3]?.replace(/\.[^.]+$/, "") || ""
+        };
+
+        return { fileName, metadata };
+      })
+      .filter((v) => v !== null);
 
     return res.status(200).json({
       verifications
     });
   } catch (error) {
-    console.error(error);
+    console.error("List verifications error:", error);
     return res.status(500).json({ error: "Could not list verifications." });
   }
 }
