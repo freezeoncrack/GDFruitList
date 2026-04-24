@@ -24,6 +24,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 const usernameInput = document.getElementById("username");
+const emailInput = document.getElementById("email");
 const passwordInput = document.getElementById("password");
 const signupButton = document.getElementById("signup-button");
 
@@ -31,17 +32,23 @@ function cleanUsername(username) {
   return username.trim().toLowerCase();
 }
 
-function usernameToEmail(username) {
-  return `${cleanUsername(username)}@fruitlist.local`;
+function cleanEmail(email) {
+  return email.trim().toLowerCase();
 }
 
 signupButton.addEventListener("click", async () => {
   const usernameId = cleanUsername(usernameInput.value);
   const displayUsername = usernameInput.value.trim();
+  const email = cleanEmail(emailInput.value);
   const password = passwordInput.value;
 
-  if (!usernameId || !password) {
-    alert("Enter username and password.");
+  if (!usernameId || !email || !password) {
+    alert("Enter username, email, and password.");
+    return;
+  }
+
+  if (!email.includes("@")) {
+    alert("Enter a valid email.");
     return;
   }
 
@@ -61,8 +68,6 @@ signupButton.addEventListener("click", async () => {
       throw new Error("Username already taken.");
     }
 
-    const email = usernameToEmail(usernameId);
-
     const userCredential = await createUserWithEmailAndPassword(
       auth,
       email,
@@ -73,6 +78,7 @@ signupButton.addEventListener("click", async () => {
 
     await setDoc(userRef, {
       username: displayUsername,
+      email: email,
       uid: uid,
       completedLevels: [],
       points: 0

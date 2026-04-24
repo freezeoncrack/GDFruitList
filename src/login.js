@@ -47,7 +47,15 @@ loginButton.addEventListener("click", async () => {
   loginButton.textContent = "Logging in...";
 
   try {
-    const email = usernameToEmail(usernameId);
+    const userRef = doc(db, "users", usernameId);
+    const userSnap = await getDoc(userRef);
+
+    if (!userSnap.exists()) {
+      throw new Error("User not found.");
+    }
+
+    const userData = userSnap.data();
+    const email = userData.email || usernameToEmail(usernameId);
 
     const userCredential = await signInWithEmailAndPassword(
       auth,
@@ -56,15 +64,6 @@ loginButton.addEventListener("click", async () => {
     );
 
     const authUid = userCredential.user.uid;
-
-    const userRef = doc(db, "users", usernameId);
-    const userSnap = await getDoc(userRef);
-
-    if (!userSnap.exists()) {
-      throw new Error("No Firestore user document found.");
-    }
-
-    const userData = userSnap.data();
 
     if (userData.uid !== authUid) {
       throw new Error("UID mismatch.");
