@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3518382144643766"
+     crossorigin="anonymous"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GD Fruit List - Verification Upload</title>
+  <link rel="stylesheet" href="./upload.css" />
+</head>
+<body>
+  <nav class="top-nav" aria-label="Main navigation">
+    <a href="index.html">About</a>
+    <a href="list.html">Leaderboard</a>
+    <a href="users.html">User Leaderboard</a>
+    <a href="account.html" class="nav-account">Account</a>
+  </nav>
+
+  <main class="page">
+    <section class="panel">
+      <h1>Upload Level Verification</h1>
+      <p class="muted">Upload one video file for verification. The file name is generated from the fields below.</p>
+      <p class="muted" id="upload-auth-state">Checking login status...</p>
+    </section>
+
+    <section class="panel hidden" id="upload-panel">
+      <form id="verification-form" class="form" novalidate>
+        <div class="field">
+          <label for="level-name">Level Name</label>
+          <input id="level-name" type="text" maxlength="120" required placeholder="e.g. Acu" />
+        </div>
+
+        <div class="field">
+          <label for="date-verified">Date Verified</label>
+          <input id="date-verified" type="date" required />
+        </div>
+
+        <div class="field">
+          <label for="verified-by">Verified By (GD Username)</label>
+          <input id="verified-by" type="text" maxlength="60" required placeholder="Your Geometry Dash username" />
+        </div>
+
+        <div class="field">
+          <label for="discord-username">Discord Username (Optional)</label>
+          <input id="discord-username" type="text" maxlength="60" placeholder="username or username#0000" />
+        </div>
+
+        <div class="field">
+          <label for="verification-video">Verification Video (single file)</label>
+          <input id="verification-video" type="file" accept="video/*" required />
+          <p class="muted small" id="file-hint">Choose exactly one video file.</p>
+        </div>
+
+        <button id="upload-btn" type="submit">Upload Verification</button>
+      </form>
+    </section>
+
+    <section class="panel" id="auth-needed-panel">
+      <h2>Not logged in</h2>
+      <p class="muted">Log in first to upload a verification video.</p>
+      <div class="action-row">
+        <a class="button-link" href="login.html">Go to Login</a>
+        <a class="button-link" href="signup.html">Create Account</a>
+      </div>
+    </section>
+
+    <div id="toast-container" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+  </main>
+
+  <script type="module" src="src/upload.js"></script>
+</body>
+</html>
