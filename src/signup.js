@@ -5,8 +5,12 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import {
   getFirestore,
+  collection,
+  getDocs,
+  limit,
+  query,
+  where,
   doc,
-  getDoc,
   setDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
@@ -61,10 +65,14 @@ signupButton.addEventListener("click", async () => {
   signupButton.textContent = "Signing up...";
 
   try {
-    const userRef = doc(db, "users", usernameId);
-    const existingUser = await getDoc(userRef);
+    const existingUsersQuery = query(
+      collection(db, "users_public"),
+      where("usernameKey", "==", usernameId),
+      limit(1)
+    );
+    const existingUser = await getDocs(existingUsersQuery);
 
-    if (existingUser.exists()) {
+    if (!existingUser.empty) {
       throw new Error("Username already taken.");
     }
 
@@ -76,9 +84,11 @@ signupButton.addEventListener("click", async () => {
 
     const uid = userCredential.user.uid;
     const displayName = displayUsername;
+    const userRef = doc(db, "users", usernameId);
 
     await setDoc(userRef, {
       username: displayUsername,
+      usernameKey: usernameId,
       displayName: displayName,
       email: email,
       uid: uid,
@@ -88,6 +98,7 @@ signupButton.addEventListener("click", async () => {
 
     await setDoc(doc(db, "users_public", uid), {
       username: displayUsername,
+      usernameKey: usernameId,
       displayName: displayName,
       uid: uid,
       completedLevels: [],
