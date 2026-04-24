@@ -6,6 +6,7 @@ import {
 	getDocs,
 	limit,
 	query,
+	setDoc,
 	updateDoc,
 	where
 } from "firebase/firestore";
@@ -148,6 +149,15 @@ usernameForm.addEventListener("submit", async (event) => {
 		await updateDoc(doc(db, "users", currentUserDocId), {
 			username: nextUsername
 		});
+
+		await setDoc(
+			doc(db, "users_public", user.uid),
+			{
+				username: nextUsername,
+				uid: user.uid
+			},
+			{ merge: true }
+		);
 
 		await updateProfile(user, {
 			displayName: nextUsername

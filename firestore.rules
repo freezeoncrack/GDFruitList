@@ -1,0 +1,73 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    function userOwnsDoc() {
+      return isSignedIn() &&
+        resource.data.uid == request.auth.uid;
+    }
+
+    function creatingOwnUserDoc() {
+      return isSignedIn() &&
+        request.resource.data.uid == request.auth.uid;
+    }
+
+    function isSafeUsernameUpdate() {
+      return request.resource.data.diff(resource.data).changedKeys().hasOnly(['username']) &&
+        request.resource.data.uid == resource.data.uid;
+    }
+
+    function isOwner(resourceData) {
+      return isSignedIn() && resourceData.uid == request.auth.uid;
+    }
+
+    // Public leaderboard/read access.
+    match /levels/{levelId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Private user profiles.
+    match /users/{userId} {
+      allow read: if isAdmin() || isOwner(resource.data);
+
+      // Signup flow creates a user profile once for the authenticated user.
+      allow create: if creatingOwnUserDoc();
+
+      // Users may only change their own username; admins can edit everything.
+      allow update: if isAdmin() || (userOwnsDoc() && isSafeUsernameUpdate());
+
+      allow delete: if isAdmin();
+    }
+
+    // Public user profiles used by leaderboard/list pages.
+    match /users_public/{publicUserId} {
+      allow read: if true;
+
+      allow create: if isAdmin() || creatingOwnUserDoc();
+
+      allow update: if isAdmin() || (isOwner(resource.data) && isSafeUsernameUpdate());
+
+      allow delete: if isAdmin();
+    }
+
+    // Admin markers: users can read only their own marker; writes are admin-only.
+    match /admins/{uid} {
+      allow read: if isSignedIn() && (uid == request.auth.uid || isAdmin());
+      allow write: if isAdmin();
+    }
+
+    // Deny everything else by default.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

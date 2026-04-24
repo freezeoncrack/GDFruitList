@@ -153,6 +153,14 @@ function loadUserIntoForm(user) {
   renderLevelCheckboxes(user.completedLevels || []);
 }
 
+function resolvePublicUserDocId(userId) {
+  const existing = cachedUsers.find((u) => u.id === userId);
+  if (existing && typeof existing.uid === "string" && existing.uid.trim()) {
+    return existing.uid.trim();
+  }
+  return userId;
+}
+
 function renderLevelCheckboxes(completed = []) {
   if (!cachedLevels.length) {
     levelsCheckboxesContainer.innerHTML = "<p class='muted'>No levels available</p>";
@@ -382,12 +390,27 @@ userForm.addEventListener("submit", async (event) => {
   const points = getPointsFromCompletedLevelIds(completedLevels);
 
   try {
+    const publicUserDocId = resolvePublicUserDocId(id);
+
     await setDoc(
       doc(db, "users", id),
       {
         username,
         completedLevels,
         points
+      },
+      { merge: true }
+    );
+
+    await setDoc(
+      doc(db, "users_public", publicUserDocId),
+      {
+        username,
+        completedLevels,
+        points,
+        ...(cachedUsers.find((u) => u.id === id)?.uid && {
+          uid: cachedUsers.find((u) => u.id === id).uid
+        })
       },
       { merge: true }
     );
@@ -411,7 +434,9 @@ deleteUserBtn.addEventListener("click", async () => {
 
   try {
     setStatus("Deleting user...");
+    const publicUserDocId = resolvePublicUserDocId(editingUserId);
     await deleteDoc(doc(db, "users", editingUserId));
+    await deleteDoc(doc(db, "users_public", publicUserDocId));
     setStatus("User deleted successfully.");
     clearUserForm();
   } catch (error) {

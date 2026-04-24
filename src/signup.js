@@ -84,6 +84,13 @@ signupButton.addEventListener("click", async () => {
       points: 0
     });
 
+    await setDoc(doc(db, "users_public", uid), {
+      username: displayUsername,
+      uid: uid,
+      completedLevels: [],
+      points: 0
+    });
+
     localStorage.setItem("fruitUid", uid);
     localStorage.setItem("fruitUserDocId", usernameId);
     localStorage.setItem("fruitUsername", displayUsername);

@@ -33,7 +33,7 @@ function renderUsers(users) {
 }
 
 onSnapshot(
-  query(collection(db, "users"), orderBy("points", "desc")),
+  query(collection(db, "users_public"), orderBy("points", "desc")),
   (snap) => {
     const users = snap.docs.map((docSnap) => ({
       id: docSnap.id,

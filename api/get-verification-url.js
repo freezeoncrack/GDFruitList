@@ -134,6 +134,30 @@ async function verifyFirebaseIdToken(idToken, projectId) {
   return payload;
 }
 
+function parseCsvAllowlist(value) {
+  return new Set(
+    String(value || "")
+      .split(",")
+      .map((entry) => entry.trim().toLowerCase())
+      .filter(Boolean)
+  );
+}
+
+function isAllowedAdmin(decodedToken) {
+  const adminUids = parseCsvAllowlist(process.env.ADMIN_UIDS);
+  const adminEmails = parseCsvAllowlist(process.env.ADMIN_EMAILS);
+
+  // Fail closed: if no admin allowlists are configured, deny access.
+  if (adminUids.size === 0 && adminEmails.size === 0) {
+    return false;
+  }
+
+  const tokenUid = String(decodedToken?.sub || "").trim().toLowerCase();
+  const tokenEmail = String(decodedToken?.email || "").trim().toLowerCase();
+
+  return (tokenUid && adminUids.has(tokenUid)) || (tokenEmail && adminEmails.has(tokenEmail));
+}
+
 function parseBody(req) {
   if (!req.body) {
     return {};
@@ -165,10 +189,15 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: "Missing authentication token." });
   }
 
+  let decodedToken;
   try {
-    await verifyFirebaseIdToken(idToken, firebaseProjectId);
+    decodedToken = await verifyFirebaseIdToken(idToken, firebaseProjectId);
   } catch (error) {
     return res.status(401).json({ error: "Invalid or expired authentication token." });
+  }
+
+  if (!isAllowedAdmin(decodedToken)) {
+    return res.status(403).json({ error: "Admin access required." });
   }
 
   if (!accessKeyId || !secretAccessKey) {
