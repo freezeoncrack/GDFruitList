@@ -1,0 +1,99 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import {
+  getAuth,
+  createUserWithEmailAndPassword
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD60dHCiGedOpxiwzAgKrtA--HOLPwS_RU",
+  authDomain: "fruitdemonlist.firebaseapp.com",
+  projectId: "fruitdemonlist",
+  storageBucket: "fruitdemonlist.firebasestorage.app",
+  messagingSenderId: "946062780066",
+  appId: "1:946062780066:web:52358adcd1bb99f82dd9fb"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const usernameInput = document.getElementById("username");
+const passwordInput = document.getElementById("password");
+const signupButton = document.getElementById("signup-button");
+
+function cleanUsername(username) {
+  return username.trim().toLowerCase();
+}
+
+function usernameToEmail(username) {
+  return `${cleanUsername(username)}@fruitlist.local`;
+}
+
+signupButton.addEventListener("click", async () => {
+  const usernameId = cleanUsername(usernameInput.value);
+  const displayUsername = usernameInput.value.trim();
+  const password = passwordInput.value;
+
+  if (!usernameId || !password) {
+    alert("Enter username and password.");
+    return;
+  }
+
+  if (password.length < 6) {
+    alert("Password must be at least 6 characters.");
+    return;
+  }
+
+  signupButton.disabled = true;
+  signupButton.textContent = "Signing up...";
+
+  try {
+    const userRef = doc(db, "users", usernameId);
+    const existingUser = await getDoc(userRef);
+
+    if (existingUser.exists()) {
+      throw new Error("Username already taken.");
+    }
+
+    const email = usernameToEmail(usernameId);
+
+    const userCredential = await createUserWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
+
+    const uid = userCredential.user.uid;
+
+    await setDoc(userRef, {
+      username: displayUsername,
+      uid: uid,
+      completedLevels: [],
+      points: 0
+    });
+
+    localStorage.setItem("fruitUid", uid);
+    localStorage.setItem("fruitUserDocId", usernameId);
+    localStorage.setItem("fruitUsername", displayUsername);
+
+    window.location.href = "users.html";
+  } catch (error) {
+    console.error("Signup error:", error);
+    alert(error.message);
+  } finally {
+    signupButton.disabled = false;
+    signupButton.textContent = "Sign Up";
+  }
+});
+
+passwordInput.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    signupButton.click();
+  }
+});
