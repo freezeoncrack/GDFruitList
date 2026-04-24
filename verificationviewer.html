@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3518382144643766"
+     crossorigin="anonymous"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GD Fruit List - Verification Viewer</title>
+  <link rel="stylesheet" href="./style.css" />
+  <style>
+    .verification-list {
+      display: grid;
+      gap: 12px;
+    }
+    .verification-card {
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 14px;
+      background: #fafafa;
+      display: grid;
+      gap: 8px;
+    }
+    .verification-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 12px;
+    }
+    .verification-card-title {
+      font-weight: 600;
+      word-break: break-word;
+    }
+    .verification-card-meta {
+      color: #6b7280;
+      font-size: 0.9rem;
+      margin: 0;
+    }
+    .verification-card-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .btn-delete {
+      background: #fee2e2;
+      border: 1px solid #fca5a5;
+      color: #991b1b;
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+    .btn-delete:hover {
+      background: #fecaca;
+    }
+    .btn-view {
+      background: #dbeafe;
+      border: 1px solid #93c5fd;
+      color: #1e40af;
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+    .btn-view:hover {
+      background: #bfdbfe;
+    }
+    .loading {
+      text-align: center;
+      color: #6b7280;
+    }
+  </style>
+</head>
+<body>
+  <nav class="top-nav" aria-label="Main navigation">
+    <a href="index.html">About</a>
+    <a href="list.html">Leaderboard</a>
+    <a href="users.html">User Leaderboard</a>
+    <a href="account.html" class="nav-account">Account</a>
+  </nav>
+
+  <main class="page">
+    <section class="panel">
+      <h1>Verification Viewer</h1>
+      <p class="muted">View and manage uploaded verification videos.</p>
+      <p class="muted" id="view-auth-state">Checking authorization...</p>
+    </section>
+
+    <section class="panel hidden" id="viewer-panel">
+      <div class="toolbar">
+        <button id="refresh-btn">Refresh List</button>
+        <button id="logout-btn">Logout</button>
+      </div>
+
+      <div id="loading" class="loading hidden">
+        <p>Loading verifications...</p>
+      </div>
+
+      <div id="verifications-list" class="verification-list hidden">
+        <!-- Verification cards will be rendered here -->
+      </div>
+
+      <div id="empty-state" class="muted">
+        <p>No verifications uploaded yet.</p>
+      </div>
+    </section>
+
+    <section class="panel" id="auth-needed-panel">
+      <h2>Admin Access Required</h2>
+      <p class="muted">You do not have permission to access this page.</p>
+      <div class="action-row">
+        <a class="button-link" href="account.html">Back to Account</a>
+      </div>
+    </section>
+
+    <div id="toast-container" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+  </main>
+
+  <script type="module" src="src/verificationviewer.js"></script>
+</body>
+</html>

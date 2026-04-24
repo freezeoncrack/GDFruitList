@@ -15,6 +15,7 @@ export default defineConfig({
           signup: resolve(__dirname, 'signup.html'),
            account: resolve(__dirname, 'account.html'),
            upload: resolve(__dirname, 'upload.html'),
+           verificationviewer: resolve(__dirname, 'verificationviewer.html'),
       },
     },
   },
