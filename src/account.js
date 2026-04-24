@@ -19,9 +19,9 @@ import {
 const authStateEl = document.getElementById("account-auth-state");
 const accountPanel = document.getElementById("account-panel");
 const authNeededPanel = document.getElementById("auth-needed-panel");
+const toastContainer = document.getElementById("toast-container");
 
 const usernameForm = document.getElementById("username-form");
-const emailInput = document.getElementById("current-email");
 const usernameInput = document.getElementById("new-username");
 const saveUsernameBtn = document.getElementById("save-username-btn");
 
@@ -32,19 +32,28 @@ const sendResetBtn = document.getElementById("send-reset-btn");
 const openAdminBtn = document.getElementById("open-admin-btn");
 const logoutBtn = document.getElementById("logout-btn");
 
-const profileStatusEl = document.getElementById("profile-status");
-const securityStatusEl = document.getElementById("security-status");
-const actionStatusEl = document.getElementById("action-status");
-
 let currentUserDocId = null;
 
 function cleanUsername(value) {
 	return value.trim();
 }
 
-function setStatus(el, message, isError = false) {
-	el.textContent = message;
-	el.classList.toggle("error", isError);
+function showToast(message, isError = false) {
+	const toast = document.createElement("div");
+	toast.className = `toast ${isError ? "toast-error" : "toast-success"}`;
+	toast.textContent = message;
+	toastContainer.appendChild(toast);
+
+	requestAnimationFrame(() => {
+		toast.classList.add("show");
+	});
+
+	setTimeout(() => {
+		toast.classList.remove("show");
+		setTimeout(() => {
+			toast.remove();
+		}, 220);
+	}, 3200);
 }
 
 function setSignedInUi(signedIn) {
@@ -91,7 +100,6 @@ async function loadAccount(user) {
 		: 0;
 	const points = Number(data.points || 0).toFixed(2);
 
-	emailInput.value = user.email || data.email || "";
 	usernameInput.value = username;
 	completedCountEl.textContent = String(completedCount);
 	pointsTotalEl.textContent = points;
@@ -117,14 +125,14 @@ usernameForm.addEventListener("submit", async (event) => {
 
 	const user = auth.currentUser;
 	if (!user || !currentUserDocId) {
-		setStatus(profileStatusEl, "You must be logged in.", true);
+		showToast("You must be logged in.", true);
 		return;
 	}
 
 	const nextUsername = cleanUsername(usernameInput.value);
 
 	if (!nextUsername) {
-		setStatus(profileStatusEl, "Username cannot be empty.", true);
+		showToast("Username cannot be empty.", true);
 		return;
 	}
 
@@ -146,10 +154,10 @@ usernameForm.addEventListener("submit", async (event) => {
 		});
 
 		localStorage.setItem("fruitUsername", nextUsername);
-		setStatus(profileStatusEl, "Username updated.");
+		showToast("Username updated.");
 	} catch (error) {
 		console.error(error);
-		setStatus(profileStatusEl, error.message || "Failed to update username.", true);
+		showToast(error.message || "Failed to update username.", true);
 	} finally {
 		saveUsernameBtn.disabled = false;
 		saveUsernameBtn.textContent = "Save Username";
@@ -158,10 +166,10 @@ usernameForm.addEventListener("submit", async (event) => {
 
 sendResetBtn.addEventListener("click", async () => {
 	const user = auth.currentUser;
-	const email = user?.email || emailInput.value.trim();
+	const email = user?.email || "";
 
 	if (!email) {
-		setStatus(securityStatusEl, "No email is available for this account.", true);
+		showToast("No email is available for this account.", true);
 		return;
 	}
 
@@ -170,10 +178,10 @@ sendResetBtn.addEventListener("click", async () => {
 
 	try {
 		await sendPasswordResetEmail(auth, email);
-		setStatus(securityStatusEl, `Password reset email sent to ${email}.`);
+		showToast(`Password reset email sent to ${email}.`);
 	} catch (error) {
 		console.error(error);
-		setStatus(securityStatusEl, error.message || "Failed to send reset email.", true);
+		showToast(error.message || "Failed to send reset email.", true);
 	} finally {
 		sendResetBtn.disabled = false;
 		sendResetBtn.textContent = "Forgot / Change Password";
@@ -190,18 +198,14 @@ logoutBtn.addEventListener("click", async () => {
 		localStorage.removeItem("fruitUid");
 		localStorage.removeItem("fruitUserDocId");
 		localStorage.removeItem("fruitUsername");
-		setStatus(actionStatusEl, "Logged out.");
+		showToast("Logged out.");
 	} catch (error) {
 		console.error(error);
-		setStatus(actionStatusEl, error.message || "Failed to log out.", true);
+		showToast(error.message || "Failed to log out.", true);
 	}
 });
 
 onAuthStateChanged(auth, async (user) => {
-	setStatus(profileStatusEl, "");
-	setStatus(securityStatusEl, "");
-	setStatus(actionStatusEl, "");
-
 	if (!user) {
 		currentUserDocId = null;
 		setSignedInUi(false);
@@ -217,6 +221,6 @@ onAuthStateChanged(auth, async (user) => {
 		console.error(error);
 		setSignedInUi(false);
 		authStateEl.textContent = "Could not load account details.";
-		setStatus(actionStatusEl, error.message || "Failed to load account.", true);
+		showToast(error.message || "Failed to load account.", true);
 	}
 });

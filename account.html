@@ -13,7 +13,7 @@
     <a href="index.html">About</a>
     <a href="list.html">Leaderboard</a>
     <a href="users.html">User Leaderboard</a>
-    <button type="button" class="nav-account">Account</button>
+    <a href="account.html" class="nav-account">Account</a>
   </nav>
 
   <main class="page">
@@ -31,19 +31,12 @@
 
           <form id="username-form" class="form" novalidate>
             <div class="field">
-              <label for="current-email">Email</label>
-              <input id="current-email" type="email" readonly />
-            </div>
-
-            <div class="field">
               <label for="new-username">Username</label>
               <input id="new-username" type="text" maxlength="30" placeholder="Enter your new username" required />
             </div>
 
             <button id="save-username-btn" type="submit">Save Username</button>
           </form>
-
-          <p id="profile-status" class="status"></p>
         </article>
 
         <article class="subpanel">
@@ -65,7 +58,6 @@
           <h2>Security</h2>
           <p class="muted">Send yourself a password reset email to change your password.</p>
           <button id="send-reset-btn" type="button">Forgot / Change Password</button>
-          <p id="security-status" class="status"></p>
         </article>
 
         <article class="subpanel">
@@ -74,7 +66,6 @@
             <button id="open-admin-btn" type="button">Open Admin Page</button>
             <button id="logout-btn" type="button">Log Out</button>
           </div>
-          <p id="action-status" class="status"></p>
         </article>
       </div>
     </section>
@@ -87,6 +78,8 @@
         <a class="button-link" href="signup.html">Create Account</a>
       </div>
     </section>
+
+    <div id="toast-container" class="toast-container" aria-live="polite" aria-atomic="true"></div>
   </main>
   <script type="module" src="src/account.js"></script>
 </body>
