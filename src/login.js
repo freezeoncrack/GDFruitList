@@ -5,8 +5,11 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import {
   getFirestore,
-  doc,
-  getDoc
+  collection,
+  getDocs,
+  limit,
+  query,
+  where
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -22,24 +25,20 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const usernameInput = document.getElementById("username");
+const emailInput = document.getElementById("email");
 const passwordInput = document.getElementById("password");
 const loginButton = document.getElementById("login-button");
 
-function cleanUsername(username) {
-  return username.trim().toLowerCase();
-}
-
-function usernameToEmail(username) {
-  return `${cleanUsername(username)}@fruitlist.local`;
+function cleanEmail(email) {
+  return email.trim().toLowerCase();
 }
 
 loginButton.addEventListener("click", async () => {
-  const usernameId = cleanUsername(usernameInput.value);
+  const email = cleanEmail(emailInput.value);
   const password = passwordInput.value;
 
-  if (!usernameId || !password) {
-    alert("Enter username and password.");
+  if (!email || !password) {
+    alert("Enter email and password.");
     return;
   }
 
@@ -47,16 +46,6 @@ loginButton.addEventListener("click", async () => {
   loginButton.textContent = "Logging in...";
 
   try {
-    const userRef = doc(db, "users", usernameId);
-    const userSnap = await getDoc(userRef);
-
-    if (!userSnap.exists()) {
-      throw new Error("User not found.");
-    }
-
-    const userData = userSnap.data();
-    const email = userData.email || usernameToEmail(usernameId);
-
     const userCredential = await signInWithEmailAndPassword(
       auth,
       email,
@@ -65,13 +54,25 @@ loginButton.addEventListener("click", async () => {
 
     const authUid = userCredential.user.uid;
 
+    const usersRef = collection(db, "users");
+    const userQuery = query(usersRef, where("uid", "==", authUid), limit(1));
+    const userSnapshot = await getDocs(userQuery);
+
+    if (userSnapshot.empty) {
+      throw new Error("No user profile found for this account.");
+    }
+
+    const userDoc = userSnapshot.docs[0];
+    const userData = userDoc.data();
+    const userDocId = userDoc.id;
+
     if (userData.uid !== authUid) {
       throw new Error("UID mismatch.");
     }
 
     localStorage.setItem("fruitUid", authUid);
-    localStorage.setItem("fruitUserDocId", usernameId);
-    localStorage.setItem("fruitUsername", userData.username || usernameId);
+    localStorage.setItem("fruitUserDocId", userDocId);
+    localStorage.setItem("fruitUsername", userData.username || userDocId);
 
     window.location.href = "users.html";
   } catch (error) {
