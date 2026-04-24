@@ -17,7 +17,76 @@
   </nav>
 
   <main class="page">
+    <section class="panel">
+      <h1>Account</h1>
+      <p class="muted">Update your username, send a password reset email, or open admin tools.</p>
+      <p class="muted" id="account-auth-state">Checking login status...</p>
+    </section>
 
+    <section class="panel hidden" id="account-panel">
+      <div class="account-grid">
+        <article class="subpanel">
+          <h2>Profile</h2>
+          <p class="muted">You can only edit your username here. Completed levels and points are read-only.</p>
+
+          <form id="username-form" class="form" novalidate>
+            <div class="field">
+              <label for="current-email">Email</label>
+              <input id="current-email" type="email" readonly />
+            </div>
+
+            <div class="field">
+              <label for="new-username">Username</label>
+              <input id="new-username" type="text" maxlength="30" placeholder="Enter your new username" required />
+            </div>
+
+            <button id="save-username-btn" type="submit">Save Username</button>
+          </form>
+
+          <p id="profile-status" class="status"></p>
+        </article>
+
+        <article class="subpanel">
+          <h2>Stats (Read-Only)</h2>
+          <div class="stats-list">
+            <div class="stat-card">
+              <span class="stat-label">Completed Levels</span>
+              <strong id="completed-count">0</strong>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Points</span>
+              <strong id="points-total">0.00</strong>
+            </div>
+          </div>
+          <p class="muted">Points and completed levels can only be managed by the leaderboard/admin logic.</p>
+        </article>
+
+        <article class="subpanel">
+          <h2>Security</h2>
+          <p class="muted">Send yourself a password reset email to change your password.</p>
+          <button id="send-reset-btn" type="button">Forgot / Change Password</button>
+          <p id="security-status" class="status"></p>
+        </article>
+
+        <article class="subpanel">
+          <h2>Actions</h2>
+          <div class="action-row">
+            <button id="open-admin-btn" type="button">Open Admin Page</button>
+            <button id="logout-btn" type="button">Log Out</button>
+          </div>
+          <p id="action-status" class="status"></p>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel" id="auth-needed-panel">
+      <h2>Not logged in</h2>
+      <p class="muted">Log in first to manage your account.</p>
+      <div class="action-row">
+        <a class="button-link" href="login.html">Go to Login</a>
+        <a class="button-link" href="signup.html">Create Account</a>
+      </div>
+    </section>
   </main>
   <script type="module" src="src/account.js"></script>
 </body>
